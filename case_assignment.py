@@ -59,13 +59,17 @@ def minimizer_function(param, dates, fraction_data, case_data):
     
     
     # Return days since reference monday and compute weeks since week beginning with reference monday
-    days_since_reference_monday = [(date - reference_monday).days for date in dates]
-    week_since_reference_week = [int(i/7) for i in days_since_reference_monday]
+    days_since_reference_monday = np.array([(date - reference_monday).days for date in dates])
+    week_since_reference_week = (days_since_reference_monday/7).astype(int)
     
     # Compute variant fraction for each relevant day according to ansatz function
-    daily_fractions = [ansatz_function(day, param[0], param[1]) for day in days_since_reference_monday]
+    daily_fractions = np.array([ansatz_function(day, param[0], param[1]) for day in days_since_reference_monday])
     
-    return daily_fractions
+    '''
+    for i in range(week_since_reference_week[-1]+1):
+        variant_cases[i-week_since_reference_week[0]] = 
+    '''
+    return week_since_reference_week
 
 reference_monday = dt.date(2021, 1, 4)
 
