@@ -19,10 +19,11 @@ def ansatz_function(t, alpha, t_0):
 
 def minimizer_function(param, dates, fraction_data, case_data):
     
-    # Return days since reference monday
+    # Return days since reference monday and compute weeks since week beginning with reference monday
     days_since_reference_monday = [(date - reference_monday).days for date in dates]
+    week_since_reference_week = [int(i/7) for i in days_since_reference_monday]
     
-    return days_since_reference_monday
+    return week_since_reference_week
 
 reference_monday = dt.date(2021, 1, 4)
 
