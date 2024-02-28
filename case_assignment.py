@@ -64,12 +64,16 @@ def minimizer_function(param, dates, fraction_data, case_data):
     
     # Compute variant fraction for each relevant day according to ansatz function and then daily cases
     daily_fractions = ansatz_function(days_since_reference_monday, param[0], param[1])
-    daily_cases = daily_fractions * case_data
+    daily_variant_cases = daily_fractions * case_data
+    
+    # Sum over all daily cases within a week
+    weekly_variant_cases = np.array([ np.sum(daily_variant_cases, where = (week_since_reference_week == week))
+                                     for week in range(week_since_reference_week[0], week_since_reference_week[-1] + 1) ])
     '''
     for i in range(week_since_reference_week[-1]+1):
         variant_cases[i-week_since_reference_week[0]] = 
     '''
-    return daily_cases
+    return weekly_variant_cases
 
 reference_monday = dt.date(2021, 1, 4)
 
