@@ -7,6 +7,7 @@ Created on Tue Feb 27 11:39:51 2024
 
 import numpy as np
 import datetime as dt
+from numpy.linalg import norm
 
 
 # As the ansatz function, we use a logistic function
@@ -69,19 +70,28 @@ def minimizer_function(param, dates, fraction_data, case_data):
     # Sum over all daily cases within a week
     weekly_variant_cases = np.array([ np.sum(daily_variant_cases, where = (week_since_reference_week == week))
                                      for week in range(week_since_reference_week[0], week_since_reference_week[-1] + 1) ])
-    '''
-    for i in range(week_since_reference_week[-1]+1):
-        variant_cases[i-week_since_reference_week[0]] = 
-    '''
-    return weekly_variant_cases
+    
+    # Compute total weekly cases
+    total_weekly_cases = np.array([ np.sum(case_data, where = (week_since_reference_week == week))
+                                     for week in range(week_since_reference_week[0], week_since_reference_week[-1] + 1) ])
+    
+    # Compute weekly variant fraction according to ansatz function
+    ansatz_variant_fraction = weekly_variant_cases/total_weekly_cases
+    
+    # Compute mean-squared error between model and data for variant fractions
+    mean_squared_error = norm(fraction_data - ansatz_variant_fraction)
+    
+    return ansatz_variant_fraction
 
 reference_monday = dt.date(2021, 1, 4)
 
 dates = [dt.date(2021, 1, 4) + dt.timedelta(i) for i in range(0,50)]
 
+
 case_data = np.array([1000, 2000] * 25)
-test = minimizer_function([1, 25], dates, 0, case_data)
-print(test)
+fraction_data = np.array([0.5] * 8)
+test2 = minimizer_function([1, 25], dates, fraction_data, case_data)
+print(test2)
 # Load data
 
 # Future feature: Compute uncertainties
