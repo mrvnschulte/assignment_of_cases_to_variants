@@ -9,6 +9,7 @@ import numpy as np
 import datetime as dt
 from numpy.linalg import norm
 from scipy.optimize import minimize
+import matplotlib.pyplot as plt
 
 
 # As the ansatz function, we use a logistic function
@@ -21,10 +22,10 @@ def ansatz_function(t, alpha=1, t_0=0):
     ----------
     t : array_like
         Input data.
-    alpha : float, optional
-        Logistic growth rate.
-    t_0 : array_like, optional
-        The function's midpoint, has to be the same size as t.
+    alpha : scalar or array_like, optional
+        Logistic growth rate. If array_like, has to be the same size as t.
+    t_0 : scalar or array_like, optional
+        The function's midpoint. If array_like, has to be the same size as t.
 
     Returns
     -------
@@ -56,36 +57,88 @@ def minimizer_function(param, dates, fraction_data, case_data):
 
     Returns
     -------
-    mean_squared_error : float
-        The mean-squared error between the modeled variant fraction per week and the given data.
+    residual_norm : float
+        The norm of the residual vector between the modeled variant fraction per week and the given data.
 
     '''
+    days_since_reference_monday = days_since_reference(dates)
+    weeks_since_reference_week = (days_since_reference_monday/7).astype(int)
     
-    
-    # Return days since reference monday and compute weeks since week beginning with reference monday
-    days_since_reference_monday = np.array([(date - reference_monday).days for date in dates])
-    week_since_reference_week = (days_since_reference_monday/7).astype(int)
-    
-    # Compute variant fraction for each relevant day according to ansatz function and then daily cases
-    daily_fractions = ansatz_function(days_since_reference_monday, param[0], param[1])
-    daily_variant_cases = daily_fractions * case_data
+    daily_variant_cases = daily_cases_emerging_variant(param[0], param[1], dates, case_data)
     
     # Sum over all daily cases within a week
-    weekly_variant_cases = np.array([ np.sum(daily_variant_cases, where = (week_since_reference_week == week))
-                                     for week in range(week_since_reference_week[0], week_since_reference_week[-1] + 1) ])
+    weekly_variant_cases = np.array([ np.sum(daily_variant_cases, where = (weeks_since_reference_week == week))
+                                     for week in range(weeks_since_reference_week[0], weeks_since_reference_week[-1] + 1) ])
     
     # Compute total weekly cases
-    total_weekly_cases = np.array([ np.sum(case_data, where = (week_since_reference_week == week))
-                                     for week in range(week_since_reference_week[0], week_since_reference_week[-1] + 1) ])
+    total_weekly_cases = np.array([ np.sum(case_data, where = (weeks_since_reference_week == week))
+                                     for week in range(weeks_since_reference_week[0], weeks_since_reference_week[-1] + 1) ])
     
     # Compute weekly variant fraction according to ansatz function
     ansatz_variant_fraction = weekly_variant_cases/total_weekly_cases
     
     # Compute mean-squared error between model and data for variant fractions
-    mean_squared_error = norm(fraction_data - ansatz_variant_fraction)
+    residual_norm = norm(fraction_data - ansatz_variant_fraction)
     
-    return mean_squared_error
+    return residual_norm
 
+
+
+def daily_cases_emerging_variant(alpha, t_0, dates, case_data):
+    '''
+    
+
+    Parameters
+    ----------
+    alpha : scalar or array_like, optional
+        Logistic growth rate. If array_like, has to be the same size as dates
+    t_0 : scalar or array_like, optional
+        The function's midpoint. If array_like, has to be the same size as t.
+    dates : array_like of datetime dates
+        The dates for which case data is given. Has to be ordered chronologically.
+    case_data : array_like
+        The overall cases for each date in dates. Has to be the same size as dates.
+
+    Returns
+    -------
+    daily_variant_cases : array_like
+        For each date in dates, the number of cases for the emerging variant according to a logistic growth ansatz with parameters alpha and t_0.
+
+    '''
+    
+    days_since_reference_monday = days_since_reference(dates)
+    
+    # Compute variant fraction for each relevant day according to ansatz function and then daily cases
+    daily_fractions = ansatz_function(days_since_reference_monday, alpha, t_0)
+    daily_variant_cases = daily_fractions * case_data
+    
+    return daily_variant_cases
+
+
+
+def days_since_reference(dates):
+    '''
+    
+
+    Parameters
+    ----------
+    dates : array_like of datetime dates
+        Input data.
+
+    Returns
+    -------
+    days_since_reference_monday : array_like
+        For each date in dates, the number of days since reference monday.
+
+    '''
+    
+    days_since_reference_monday = np.array([(date - reference_monday).days for date in dates])
+    
+    return days_since_reference_monday
+    
+
+
+# Reference monday is the first monday of 2021, the week where variant fraction data in Germany became available
 reference_monday = dt.date(2021, 1, 4)
 
 dates = [dt.date(2021, 1, 4) + dt.timedelta(i) for i in range(0,50)]
@@ -108,8 +161,21 @@ print(test_mse)
 
 # Future feature: Compute uncertainties
 
-# Minimize function to obtain optimal parameter
+# Minimize function to obtain optimal  and compute daily variant cases according to 
 sol = minimize(minimizer_function, [0, 0], args=(dates, test_data, case_data))
 print(sol.x)
+alpha, t_0 = sol.x
+emerging_variant_cases = daily_cases_emerging_variant(alpha, t_0, dates, case_data)
+other_variant_cases = case_data - emerging_variant_cases
 
-# Plot optimal solution
+
+# Plot optimal solution and write to csv_file
+plt.plot(dates, emerging_variant_cases, '-o', label='Emerging variant')
+plt.plot(dates, other_variant_cases, '-o', label='Other variant')
+plt.grid()
+plt.legend()
+plt.title('Daily new infections per variant')
+plt.xlabel('Date')
+plt.ylabel('New infections')
+plt.xticks(rotation=60)
+plt.show()
