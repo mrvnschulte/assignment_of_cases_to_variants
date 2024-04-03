@@ -51,7 +51,7 @@ def minimizer_function(param, dates, fraction_data, case_data):
     dates : array_like of datetime dates
         The dates for which case and variant fraction data is given. Has to be ordered chronologically.
     fraction_data : array_like
-        The variant fraction of the emerging variant for each week with at least one date in dates. Has to be the same size as dates.
+        The variant fraction of the emerging variant for each week with at least one date in dates.
     case_data : array_like
         The overall cases for each date in dates. Has to be the same size as dates.
 
@@ -61,23 +61,14 @@ def minimizer_function(param, dates, fraction_data, case_data):
         The norm of the residual vector between the modeled variant fraction per week and the given data.
 
     '''
-    days_since_reference_monday = days_since_reference(dates)
-    weeks_since_reference_week = (days_since_reference_monday/7).astype(int)
     
+    # Compute daily cases of emerging variant and add cases weekly
     daily_variant_cases = daily_cases_emerging_variant(param[0], param[1], dates, case_data)
+    ansatz_variant_fraction = weekly_variant_fraction(dates, daily_variant_cases, case_data)
     
-    # Sum over all daily cases within a week
-    weekly_variant_cases = np.array([ np.sum(daily_variant_cases, where = (weeks_since_reference_week == week))
-                                     for week in range(weeks_since_reference_week[0], weeks_since_reference_week[-1] + 1) ])
-    
-    # Compute total weekly cases
-    total_weekly_cases = np.array([ np.sum(case_data, where = (weeks_since_reference_week == week))
-                                     for week in range(weeks_since_reference_week[0], weeks_since_reference_week[-1] + 1) ])
-    
-    # Compute weekly variant fraction according to ansatz function
-    ansatz_variant_fraction = weekly_variant_cases/total_weekly_cases
     
     # Compute mean-squared error between model and data for variant fractions
+    # Residual norm gives more accurate optimization results than mean-squared error (by direct computing implementation)
     residual_norm = norm(fraction_data - ansatz_variant_fraction)
     
     return residual_norm
@@ -135,7 +126,104 @@ def days_since_reference(dates):
     days_since_reference_monday = np.array([(date - reference_monday).days for date in dates])
     
     return days_since_reference_monday
+
+def weeks_since_reference(dates):
+    '''
     
+
+    Parameters
+    ----------
+    dates : TYPE
+        DESCRIPTION.
+
+    Returns
+    -------
+    weeks_since_reference_week : TYPE
+        DESCRIPTION.
+
+    '''
+    
+    weeks_since_reference_week = (days_since_reference(dates)/7).astype(int)
+    
+    return weeks_since_reference_week
+
+def weekly_sum_of_cases(dates, daily_cases):
+    '''
+    
+
+    Parameters
+    ----------
+    dates : TYPE
+        DESCRIPTION.
+    daily_cases : TYPE
+        DESCRIPTION.
+
+    Returns
+    -------
+    weekly_cases : TYPE
+        DESCRIPTION.
+
+    '''
+    
+    weeks_since_reference_week = weeks_since_reference(dates)
+    
+    weekly_cases = np.array([ np.sum(daily_cases, where = (weeks_since_reference_week == week))
+                                     for week in range(weeks_since_reference_week[0], weeks_since_reference_week[-1] + 1) ])
+    
+    return weekly_cases
+
+def thursdays_of_weeks(weeks):
+    '''
+    
+
+    Parameters
+    ----------
+    weeks : TYPE
+        DESCRIPTION.
+
+    Returns
+    -------
+    thursdays : TYPE
+        DESCRIPTION.
+
+    '''
+    
+    non_duplicate_weeks = non_duplicate_list(weeks)
+    thursdays = [reference_monday + dt.timedelta(days=3, weeks=int(i)) for i in non_duplicate_weeks]
+    
+    return thursdays
+
+def weekly_variant_fraction(dates, variant_cases, total_cases):
+    '''
+    
+
+    Parameters
+    ----------
+    dates : TYPE
+        DESCRIPTION.
+    variant_cases : TYPE
+        DESCRIPTION.
+    total_cases : TYPE
+        DESCRIPTION.
+
+    Returns
+    -------
+    weekly_fraction : TYPE
+        DESCRIPTION.
+
+    '''
+    
+    weekly_variant_cases = weekly_sum_of_cases(dates, variant_cases)
+    weekly_total_cases = weekly_sum_of_cases(dates, case_data)
+    weekly_fraction = weekly_variant_cases/weekly_total_cases
+    
+    return weekly_fraction
+
+def non_duplicate_list(duplicate_list):
+    
+    non_duplicate_list = list(dict.fromkeys(duplicate_list))
+    
+    return non_duplicate_list
 
 
 # Reference monday is the first monday of 2021, the week where variant fraction data in Germany became available
@@ -161,15 +249,21 @@ print(test_mse)
 
 # Future feature: Compute uncertainties
 
-# Minimize function to obtain optimal  and compute daily variant cases according to 
+# Minimize function to obtain optimal parameters and compute daily variant cases according to them
 sol = minimize(minimizer_function, [0, 0], args=(dates, test_data, case_data))
 print(sol.x)
 alpha, t_0 = sol.x
 emerging_variant_cases = daily_cases_emerging_variant(alpha, t_0, dates, case_data)
 other_variant_cases = case_data - emerging_variant_cases
 
+weeks = weeks_since_reference(dates)
+weekly_fraction = weekly_variant_fraction(dates, emerging_variant_cases, case_data)
+thursdays = thursdays_of_weeks(weeks)
+calendar_weeks = ['{0:d}-{1:02d}'.format(day.isocalendar()[0], day.isocalendar()[1]) for day in thursdays]
 
-# Plot optimal solution and write to csv_file
+
+# Plot optimal solution
+# TODO: Write to csv_file
 plt.plot(dates, emerging_variant_cases, '-o', label='Emerging variant')
 plt.plot(dates, other_variant_cases, '-o', label='Other variant')
 plt.grid()
@@ -178,4 +272,14 @@ plt.title('Daily new infections per variant')
 plt.xlabel('Date')
 plt.ylabel('New infections')
 plt.xticks(rotation=60)
+plt.show()
+
+plt.plot(thursdays, weekly_fraction, 'o', label='Computed data')
+plt.plot(thursdays, test_data, 'x', label='Measured data')
+plt.grid()
+plt.legend()
+plt.title('Weekly case fraction of emerging variant')
+plt.xlabel('Week')
+plt.ylabel('Fraction of cases')
+plt.xticks(thursdays, calendar_weeks, rotation=60)
 plt.show()
