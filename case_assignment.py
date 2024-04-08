@@ -10,6 +10,7 @@ import datetime as dt
 from numpy.linalg import norm
 from scipy.optimize import minimize
 import matplotlib.pyplot as plt
+import pandas as pd
 
 
 # As the ansatz function, we use a logistic function
@@ -240,23 +241,38 @@ def non_duplicate_list(duplicate_list):
 # Reference monday is the first monday of 2021, the week where variant fraction data in Germany became available
 reference_monday = dt.date(2021, 1, 4)
 
-dates = [dt.date(2021, 1, 4) + dt.timedelta(i) for i in range(0,50)]
+start_date = dt.date(2021, 1, 4)
+end_date = dt.date(2021, 2, 22)
 
-test_data = [1.123326273421474010e-09,
-1.528596494836050375e-06,
-1.345074042812720088e-03,
-3.712180266456135969e-01,
-9.903258463629376340e-01,
-9.999887054671490194e-01,
-9.999999916996794580e-01,
-9.999999999622486424e-01]
+dates = pd.date_range(start_date, end_date).to_pydatetime()
+dates = [date.date() for date in dates]
+dates_as_strings = [f'{date:%Y-%m-%d}' for date in dates]
+#dates = [dt.date(2021, 1, 4) + dt.timedelta(i) for i in range(0,50)]
+
+test_data = [1.681628290371829995e-03,
+1.316999199067206416e-02,
+9.812610056247740575e-02,
+4.515924237042467371e-01,
+8.578712838094859627e-01,
+9.796706985589836991e-01,
+9.974643890465627605e-01,
+9.992539711661633239e-01
+]
 
 
-case_data = np.array([1000, 2000] * 25)
+
+
+# Load data (done: infection data, to-do: variant fraction data)
+
+data = pd.read_csv('./Data/Infection Data/COVID-19-Cases 7-Day Incidence Germany.csv')
+data = data[data['Altersgruppe'] == '00+']
+data = data.loc[data['Meldedatum'].isin(dates_as_strings)]
+case_data = data['Faelle_neu'].tolist()
+
+
 fraction_data = np.array([0.5] * 8)
-test_mse = minimizer_function([1, 25], dates, test_data, case_data)
+test_mse = minimizer_function([0.3, 25], dates, test_data, case_data)
 print(test_mse)
-# Load data
 
 # Future feature: Compute uncertainties
 
