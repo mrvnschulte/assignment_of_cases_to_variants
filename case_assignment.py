@@ -172,13 +172,15 @@ def weekly_sum_of_cases(dates, daily_cases):
     
     return weekly_cases
 
-def thursdays_of_weeks(weeks):
+def days_of_weeks(weeks, day):
     '''
     
 
     Parameters
     ----------
     weeks : TYPE
+        DESCRIPTION.
+    day : TYPE
         DESCRIPTION.
 
     Returns
@@ -188,8 +190,17 @@ def thursdays_of_weeks(weeks):
 
     '''
     
+    day_codes = {
+        'Monday': 0,
+        'Tuesday': 1,
+        'Wednesday': 2,
+        'Thursday': 3,
+        'Friday': 4,
+        'Saturday': 5,
+        'Sunday': 6}
+    
     non_duplicate_weeks = non_duplicate_list(weeks)
-    thursdays = [reference_monday + dt.timedelta(days=3, weeks=int(i)) for i in non_duplicate_weeks]
+    thursdays = [reference_monday + dt.timedelta(days=day_codes[day], weeks=int(i)) for i in non_duplicate_weeks]
     
     return thursdays
 
@@ -258,7 +269,8 @@ other_variant_cases = case_data - emerging_variant_cases
 
 weeks = weeks_since_reference(dates)
 weekly_fraction = weekly_variant_fraction(dates, emerging_variant_cases, case_data)
-thursdays = thursdays_of_weeks(weeks)
+thursdays = days_of_weeks(weeks, 'Thursday')
+mondays = days_of_weeks(weeks, 'Monday')
 calendar_weeks = ['{0:d}-{1:02d}'.format(day.isocalendar()[0], day.isocalendar()[1]) for day in thursdays]
 
 
@@ -271,7 +283,7 @@ plt.legend()
 plt.title('Daily new infections per variant')
 plt.xlabel('Date')
 plt.ylabel('New infections')
-plt.xticks(rotation=60)
+plt.xticks(mondays, rotation=60)
 plt.show()
 
 plt.plot(thursdays, weekly_fraction, 'o', label='Computed data')
