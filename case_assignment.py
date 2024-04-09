@@ -232,22 +232,81 @@ def weekly_variant_fraction(dates, variant_cases, total_cases):
     return weekly_fraction
 
 def non_duplicate_list(duplicate_list):
+    '''
+    
+
+    Parameters
+    ----------
+    duplicate_list : TYPE
+        DESCRIPTION.
+
+    Returns
+    -------
+    non_duplicate_list : TYPE
+        DESCRIPTION.
+
+    '''
     
     non_duplicate_list = list(dict.fromkeys(duplicate_list))
     
     return non_duplicate_list
+
+def get_previous_monday(date):
+    '''
+    
+
+    Parameters
+    ----------
+    date : TYPE
+        DESCRIPTION.
+
+    Returns
+    -------
+    prev_monday : TYPE
+        DESCRIPTION.
+
+    '''
+    
+    prev_monday = date - dt.timedelta(days=date.weekday())
+    
+    return prev_monday
+
+def german_percent_strings_to_float(strings):
+    '''
+    
+
+    Parameters
+    ----------
+    strings : TYPE
+        DESCRIPTION.
+
+    Returns
+    -------
+    float_list : TYPE
+        DESCRIPTION.
+
+    '''
+    
+    float_list = [float(string.rstrip('%').replace(',', '.'))/100 for string in strings]
+    
+    return float_list
 
 
 # Reference monday is the first monday of 2021, the week where variant fraction data in Germany became available
 reference_monday = dt.date(2021, 1, 4)
 
 start_date = dt.date(2021, 1, 4)
-end_date = dt.date(2021, 2, 22)
+end_date = dt.date(2021, 5, 2)
 
 dates = pd.date_range(start_date, end_date).to_pydatetime()
 dates = [date.date() for date in dates]
 dates_as_strings = [f'{date:%Y-%m-%d}' for date in dates]
-#dates = [dt.date(2021, 1, 4) + dt.timedelta(i) for i in range(0,50)]
+
+weeks = weeks_since_reference(dates)
+
+mondays = days_of_weeks(weeks, 'Monday')
+month_names = ['Januar', 'Februar', 'März', 'April', 'Mai', 'Juni', 'Juli', 'August', 'September', 'Oktober', 'November', 'Dezember']
+mondays_as_german_strings = [f'{date.day}. {month_names[date.month-1]} {date.year}' for date in mondays]
 
 test_data = [1.681628290371829995e-03,
 1.316999199067206416e-02,
@@ -255,8 +314,7 @@ test_data = [1.681628290371829995e-03,
 4.515924237042467371e-01,
 8.578712838094859627e-01,
 9.796706985589836991e-01,
-9.974643890465627605e-01,
-9.992539711661633239e-01
+9.974643890465627605e-01
 ]
 
 
@@ -269,24 +327,27 @@ data = data[data['Altersgruppe'] == '00+']
 data = data.loc[data['Meldedatum'].isin(dates_as_strings)]
 case_data = data['Faelle_neu'].tolist()
 
-
-fraction_data = np.array([0.5] * 8)
-test_mse = minimizer_function([0.3, 25], dates, test_data, case_data)
-print(test_mse)
+frac_data = pd.read_csv('./Data/Variant Fraction Data/VOC Data.csv', sep=';')
+frac_data = frac_data[frac_data['WHO_LABEL_RENAMED'] == 'Alpha']
+frac_data = frac_data.loc[frac_data['ISO-Woche von Sequence.Date Of Sampling (filtered)'].isin(mondays_as_german_strings)]
+fraction_data = frac_data['% von insgesamt Anzahl von SEQUENCE.ID'].tolist()
+fraction_data = german_percent_strings_to_float(fraction_data)
+# test_mse = minimizer_function([0.3, 25], dates, test_data, case_data)
+# print(test_mse)
 
 # Future feature: Compute uncertainties
 
 # Minimize function to obtain optimal parameters and compute daily variant cases according to them
-sol = minimize(minimizer_function, [0, 0], args=(dates, test_data, case_data))
+sol = minimize(minimizer_function, [1, 0], args=(dates, fraction_data, case_data))
 print(sol.x)
+print(sol.fun)
 alpha, t_0 = sol.x
 emerging_variant_cases = daily_cases_emerging_variant(alpha, t_0, dates, case_data)
 other_variant_cases = case_data - emerging_variant_cases
 
-weeks = weeks_since_reference(dates)
+
 weekly_fraction = weekly_variant_fraction(dates, emerging_variant_cases, case_data)
 thursdays = days_of_weeks(weeks, 'Thursday')
-mondays = days_of_weeks(weeks, 'Monday')
 calendar_weeks = ['{0:d}-{1:02d}'.format(day.isocalendar()[0], day.isocalendar()[1]) for day in thursdays]
 
 
@@ -303,7 +364,7 @@ plt.xticks(mondays, rotation=60)
 plt.show()
 
 plt.plot(thursdays, weekly_fraction, 'o', label='Computed data')
-plt.plot(thursdays, test_data, 'x', label='Measured data')
+plt.plot(thursdays, fraction_data, 'x', label='Measured data')
 plt.grid()
 plt.legend()
 plt.title('Weekly case fraction of emerging variant')
