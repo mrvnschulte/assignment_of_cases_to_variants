@@ -76,7 +76,7 @@ def minimizer_function(param, dates, fraction_data, case_data):
 
 
 
-def daily_cases_emerging_variant(alpha, t_0, dates, case_data):
+def daily_cases_emerging_variant(alpha, t_0, dates, case_data, integer=False):
     '''
     
 
@@ -102,7 +102,11 @@ def daily_cases_emerging_variant(alpha, t_0, dates, case_data):
     
     # Compute variant fraction for each relevant day according to ansatz function and then daily cases
     daily_fractions = ansatz_function(days_since_reference_monday, alpha, t_0)
-    daily_variant_cases = daily_fractions * case_data
+    
+    if integer:
+        daily_variant_cases = np.round(daily_fractions * case_data).astype('int')
+    else:
+        daily_variant_cases = daily_fractions * case_data
     
     return daily_variant_cases
 
@@ -226,7 +230,7 @@ def weekly_variant_fraction(dates, variant_cases, total_cases):
     '''
     
     weekly_variant_cases = weekly_sum_of_cases(dates, variant_cases)
-    weekly_total_cases = weekly_sum_of_cases(dates, case_data)
+    weekly_total_cases = weekly_sum_of_cases(dates, total_cases)
     weekly_fraction = weekly_variant_cases/weekly_total_cases
     
     return weekly_fraction
@@ -292,83 +296,134 @@ def german_percent_strings_to_float(strings):
     return float_list
 
 
+
+def compute_emerging_variant(variant, start_date, end_date, data_frame):
+    dates = pd.date_range(start_date, end_date).to_pydatetime()
+    dates = [date.date() for date in dates]
+    dates_as_strings = [f'{date:%Y-%m-%d}' for date in dates]
+    
+    weeks = weeks_since_reference(dates)
+    
+    mondays = days_of_weeks(weeks, 'Monday')
+    month_names = ['Januar', 'Februar', 'März', 'April', 'Mai', 'Juni', 'Juli', 'August', 'September', 'Oktober', 'November', 'Dezember']
+    mondays_as_german_strings = [f'{date.day}. {month_names[date.month-1]} {date.year}' for date in mondays]
+    
+    
+    # Load data
+    
+    data = pd.read_csv('./Data/Infection Data/COVID-19-Cases 7-Day Incidence Germany.csv')
+    data = data[data['Altersgruppe'] == '00+']
+    case_data = data.loc[data['Meldedatum'].isin(dates_as_strings)]
+    case_data = case_data['Faelle_neu'].tolist()
+    
+    frac_data = pd.read_csv('./Data/Variant Fraction Data/VOC Data.csv', sep=';')
+    frac_data = frac_data[frac_data['WHO_LABEL_RENAMED'] == variant]
+    frac_data = frac_data.loc[frac_data['ISO-Woche von Sequence.Date Of Sampling (filtered)'].isin(mondays_as_german_strings)]
+    fraction_data = frac_data['% von insgesamt Anzahl von SEQUENCE.ID'].tolist()
+    fraction_data = german_percent_strings_to_float(fraction_data)
+    
+    
+    # Future feature: Compute uncertainties
+    
+    
+    
+    # Minimize function to obtain optimal parameters and compute daily variant cases according to them
+    start_end_relative = days_since_reference([start_date, end_date])
+    initial_start = np.average(start_end_relative)
+    
+    sol = minimize(minimizer_function, [0.1, initial_start], args=(dates, fraction_data, case_data))
+    print(sol.x)
+    print(sol.fun)
+    alpha, t_0 = sol.x
+    emerging_variant_cases = daily_cases_emerging_variant(alpha, t_0, dates, case_data, integer=True)
+    other_variant_cases = case_data - emerging_variant_cases
+    
+    
+    weekly_fraction = weekly_variant_fraction(dates, emerging_variant_cases, case_data)
+    thursdays = days_of_weeks(weeks, 'Thursday')
+    calendar_weeks = ['{0:d}-{1:02d}'.format(day.isocalendar()[0], day.isocalendar()[1]) for day in thursdays]
+    
+    
+    # Plot optimal solution
+    var = variant
+    if var=='Omikron':
+        var.replace('k', 'c')
+        
+    plt.plot(dates, emerging_variant_cases, '-o', label=f'{var} variant')
+    plt.plot(dates, other_variant_cases, '-o', label='Other variants')
+    plt.grid()
+    plt.legend()
+    plt.title('Reported new infections per variant and day')
+    plt.xlabel('Date')
+    plt.ylabel('New infections')
+    plt.xticks(mondays, rotation=60)
+    plt.tight_layout()
+    plt.savefig(f'./Plots/Daily_new_infections_{var}_variant.{fileformat}')
+    plt.show()
+    
+    
+    plt.plot(thursdays, weekly_fraction, 'o', label='Computed data')
+    plt.plot(thursdays, fraction_data, 'x', label='Measured data')
+    plt.grid()
+    plt.legend()
+    
+    plt.title(f'Weekly case fraction of {var} variant')
+    plt.xlabel('Week')
+    plt.ylabel('Fraction of cases')
+    plt.xticks(thursdays, calendar_weeks, rotation=60)
+    plt.tight_layout()
+    plt.savefig(f'./Plots/Weekly_case_fraction_{var}_variant.{fileformat}')
+    plt.show()
+    
+    all_dates_as_strings = [f'{date:%Y-%m-%d}' for date in data_frame['Date']]
+    all_case_data = data.loc[data['Meldedatum'].isin(all_dates_as_strings)]
+    all_case_data = all_case_data['Faelle_neu'].tolist()
+    all_emerging_variant_cases = daily_cases_emerging_variant(alpha, t_0, data_frame['Date'].tolist(), all_case_data, integer=True)
+    
+    
+    if 'Other variants' in data_frame:
+        all_emerging_variant_cases = daily_cases_emerging_variant(alpha, t_0, data_frame['Date'].tolist(), data_frame['Other variants'], integer=True)
+        all_other_variant_cases = data_frame['Other variants'].tolist() - all_emerging_variant_cases
+        data_frame['Other variants'] = all_other_variant_cases
+    else:
+        all_case_data = data.loc[data['Meldedatum'].isin(all_dates_as_strings)]
+        all_case_data = all_case_data['Faelle_neu'].tolist()
+        all_emerging_variant_cases = daily_cases_emerging_variant(alpha, t_0, data_frame['Date'].tolist(), all_case_data, integer=True)
+        all_other_variant_cases = all_case_data - all_emerging_variant_cases
+        data_frame.insert(1, 'Other variants', all_other_variant_cases)
+
+    data_frame.insert(2, variant, all_emerging_variant_cases)
+    
+
 # Reference monday is the first monday of 2021, the week where variant fraction data in Germany became available
 reference_monday = dt.date(2021, 1, 4)
 
-start_date = dt.date(2021, 1, 4)
-end_date = dt.date(2021, 5, 2)
+start_dates = [dt.date(2021, 11, 15), dt.date(2021, 4, 19), dt.date(2021, 1, 4)]
+end_dates = [dt.date(2022, 1, 2), dt.date(2021, 8, 8), dt.date(2021, 4, 4)]
+variants = ['Omikron', 'Delta', 'Alpha']
 
-dates = pd.date_range(start_date, end_date).to_pydatetime()
-dates = [date.date() for date in dates]
-dates_as_strings = [f'{date:%Y-%m-%d}' for date in dates]
+all_dates = pd.date_range(dt.date(2021, 1, 1), dt.date(2021, 12, 31)).to_pydatetime()
+all_dates = [date.date() for date in all_dates]
+cases_per_variant = pd.DataFrame(all_dates, columns=['Date'])
 
-weeks = weeks_since_reference(dates)
+fileformat = 'svg'
 
-mondays = days_of_weeks(weeks, 'Monday')
-month_names = ['Januar', 'Februar', 'März', 'April', 'Mai', 'Juni', 'Juli', 'August', 'September', 'Oktober', 'November', 'Dezember']
-mondays_as_german_strings = [f'{date.day}. {month_names[date.month-1]} {date.year}' for date in mondays]
-
-test_data = [1.681628290371829995e-03,
-1.316999199067206416e-02,
-9.812610056247740575e-02,
-4.515924237042467371e-01,
-8.578712838094859627e-01,
-9.796706985589836991e-01,
-9.974643890465627605e-01
-]
-
-
-
-
-# Load data (done: infection data, to-do: variant fraction data)
-
-data = pd.read_csv('./Data/Infection Data/COVID-19-Cases 7-Day Incidence Germany.csv')
-data = data[data['Altersgruppe'] == '00+']
-data = data.loc[data['Meldedatum'].isin(dates_as_strings)]
-case_data = data['Faelle_neu'].tolist()
-
-frac_data = pd.read_csv('./Data/Variant Fraction Data/VOC Data.csv', sep=';')
-frac_data = frac_data[frac_data['WHO_LABEL_RENAMED'] == 'Alpha']
-frac_data = frac_data.loc[frac_data['ISO-Woche von Sequence.Date Of Sampling (filtered)'].isin(mondays_as_german_strings)]
-fraction_data = frac_data['% von insgesamt Anzahl von SEQUENCE.ID'].tolist()
-fraction_data = german_percent_strings_to_float(fraction_data)
-# test_mse = minimizer_function([0.3, 25], dates, test_data, case_data)
-# print(test_mse)
-
-# Future feature: Compute uncertainties
-
-# Minimize function to obtain optimal parameters and compute daily variant cases according to them
-sol = minimize(minimizer_function, [1, 0], args=(dates, fraction_data, case_data))
-print(sol.x)
-print(sol.fun)
-alpha, t_0 = sol.x
-emerging_variant_cases = daily_cases_emerging_variant(alpha, t_0, dates, case_data)
-other_variant_cases = case_data - emerging_variant_cases
-
-
-weekly_fraction = weekly_variant_fraction(dates, emerging_variant_cases, case_data)
-thursdays = days_of_weeks(weeks, 'Thursday')
-calendar_weeks = ['{0:d}-{1:02d}'.format(day.isocalendar()[0], day.isocalendar()[1]) for day in thursdays]
-
-
-# Plot optimal solution
-# TODO: Write to csv_file
-plt.plot(dates, emerging_variant_cases, '-o', label='Emerging variant')
-plt.plot(dates, other_variant_cases, '-o', label='Other variant')
+for i in range(len(variants)):
+    compute_emerging_variant(variants[i], start_dates[i], end_dates[i], cases_per_variant)
+    
+plt.plot(cases_per_variant['Date'], cases_per_variant['Other variants'], '-o', label='Wild Type')
+plt.plot(cases_per_variant['Date'], cases_per_variant['Alpha'], '-o', label='Alpha')
+plt.plot(cases_per_variant['Date'], cases_per_variant['Delta'], '-o', label='Delta')
+plt.plot(cases_per_variant['Date'], cases_per_variant['Omikron'], '-o', label='Omicron')
 plt.grid()
 plt.legend()
-plt.title('Daily new infections per variant')
+plt.title('Reported new infections per variant and day')
 plt.xlabel('Date')
 plt.ylabel('New infections')
-plt.xticks(mondays, rotation=60)
+plt.xticks(rotation=60)
+plt.tight_layout()
+plt.savefig(f'./Plots/Daily_new_infections_2021.{fileformat}')
 plt.show()
 
-plt.plot(thursdays, weekly_fraction, 'o', label='Computed data')
-plt.plot(thursdays, fraction_data, 'x', label='Measured data')
-plt.grid()
-plt.legend()
-plt.title('Weekly case fraction of emerging variant')
-plt.xlabel('Week')
-plt.ylabel('Fraction of cases')
-plt.xticks(thursdays, calendar_weeks, rotation=60)
-plt.show()
+cases_per_variant.to_csv('./Data/daily_cases_per_variant.csv', index=False)
+cases_per_variant.to_excel('./Data/daily_cases_per_variant.xlsx', index=False)
