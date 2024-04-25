@@ -370,7 +370,7 @@ def compute_emerging_variant(variant, start_date, end_date, data_frame):
     # Plot optimal solution
     var = variant
     if var=='Omikron':
-        var.replace('k', 'c')
+        var = var.replace('k', 'c')
         
     plt.plot(dates, emerging_variant_cases, '-o', label=f'{var} variant')
     plt.plot(dates, other_variant_cases, '-o', label='Other variants')
