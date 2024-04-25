@@ -78,7 +78,7 @@ def minimizer_function(param, dates, fraction_data, case_data):
 
 def daily_cases_emerging_variant(alpha, t_0, dates, case_data, integer=False):
     '''
-    
+    Returns the daily number of cases according to a logistic splitting with parameters alpha and t_0
 
     Parameters
     ----------
@@ -116,7 +116,7 @@ def daily_cases_emerging_variant(alpha, t_0, dates, case_data, integer=False):
 
 def days_since_reference(dates):
     '''
-    
+    Returns the days since reference monday
 
     Parameters
     ----------
@@ -136,7 +136,7 @@ def days_since_reference(dates):
 
 def weeks_since_reference(dates):
     '''
-    
+    Returns the weeks since reference monday
 
     Parameters
     ----------
@@ -156,7 +156,7 @@ def weeks_since_reference(dates):
 
 def weekly_sum_of_cases(dates, daily_cases):
     '''
-    
+    Sums up the daily cases to weekly ones
 
     Parameters
     ----------
@@ -181,7 +181,7 @@ def weekly_sum_of_cases(dates, daily_cases):
 
 def days_of_weeks(weeks, day):
     '''
-    
+    Returns all date that are the specified day in the weeks given.
 
     Parameters
     ----------
@@ -213,7 +213,7 @@ def days_of_weeks(weeks, day):
 
 def weekly_variant_fraction(dates, variant_cases, total_cases):
     '''
-    
+    Returns the weekly variant fraction for all weeks with dates in dates
 
     Parameters
     ----------
@@ -239,7 +239,7 @@ def weekly_variant_fraction(dates, variant_cases, total_cases):
 
 def non_duplicate_list(duplicate_list):
     '''
-    
+    Returns the list without duplicates
 
     Parameters
     ----------
@@ -259,7 +259,7 @@ def non_duplicate_list(duplicate_list):
 
 def get_previous_monday(date):
     '''
-    
+    Returns the last Monday before date
 
     Parameters
     ----------
@@ -269,7 +269,7 @@ def get_previous_monday(date):
     Returns
     -------
     prev_monday : datetime date
-        The monday previous to date.
+        The Monday previous to date.
 
     '''
     
@@ -279,7 +279,7 @@ def get_previous_monday(date):
 
 def german_percent_strings_to_float(strings):
     '''
-    
+    Converts an array of strings which represent percentages with decimal commas into floats
 
     Parameters
     ----------
@@ -301,7 +301,7 @@ def german_percent_strings_to_float(strings):
 
 def compute_emerging_variant(variant, start_date, end_date, data_frame):
     '''
-    
+    Splits data between the respective variant and others according to an interpolation respecting data between start and end date
 
     Parameters
     ----------
