@@ -82,14 +82,16 @@ def daily_cases_emerging_variant(alpha, t_0, dates, case_data, integer=False):
 
     Parameters
     ----------
-    alpha : scalar or array_like, optional
+    alpha : scalar or array_like
         Logistic growth rate. If array_like, has to be the same size as dates
-    t_0 : scalar or array_like, optional
+    t_0 : scalar or array_like
         The function's midpoint. If array_like, has to be the same size as t.
     dates : array_like of datetime dates
         The dates for which case data is given. Has to be ordered chronologically.
     case_data : array_like
         The overall cases for each date in dates. Has to be the same size as dates.
+    integer : Boolean, optional
+        If True, daily cases are rounded to the next integer
 
     Returns
     -------
@@ -138,13 +140,13 @@ def weeks_since_reference(dates):
 
     Parameters
     ----------
-    dates : TYPE
-        DESCRIPTION.
+    dates : array_like of datetime dates
+        Input data.
 
     Returns
     -------
-    weeks_since_reference_week : TYPE
-        DESCRIPTION.
+    weeks_since_reference_week : array_like
+        For each date in dates, the number of complete weeks since reference monday.
 
     '''
     
@@ -158,15 +160,15 @@ def weekly_sum_of_cases(dates, daily_cases):
 
     Parameters
     ----------
-    dates : TYPE
-        DESCRIPTION.
-    daily_cases : TYPE
-        DESCRIPTION.
+    dates : array_like of datetime dates
+        All dates, for which daily cases are given.
+    daily_cases : array_like
+        Cases for each date in dates. Has to be the same size as dates.
 
     Returns
     -------
-    weekly_cases : TYPE
-        DESCRIPTION.
+    weekly_cases : array_like
+        For each week with at least one date in dates, returns the weekly sum of cases.
 
     '''
     
@@ -183,15 +185,15 @@ def days_of_weeks(weeks, day):
 
     Parameters
     ----------
-    weeks : TYPE
-        DESCRIPTION.
-    day : TYPE
-        DESCRIPTION.
+    weeks : array_like
+        List of integers, representing the weeks since reference monday.
+    day : String
+        Day of the week.
 
     Returns
     -------
-    thursdays : TYPE
-        DESCRIPTION.
+    dates : array_like of datetime dates
+        The dates of each specified day of the week for the given weeks.
 
     '''
     
@@ -205,9 +207,9 @@ def days_of_weeks(weeks, day):
         'Sunday': 6}
     
     non_duplicate_weeks = non_duplicate_list(weeks)
-    thursdays = [reference_monday + dt.timedelta(days=day_codes[day], weeks=int(i)) for i in non_duplicate_weeks]
+    dates = [reference_monday + dt.timedelta(days=day_codes[day], weeks=int(i)) for i in non_duplicate_weeks]
     
-    return thursdays
+    return dates
 
 def weekly_variant_fraction(dates, variant_cases, total_cases):
     '''
@@ -215,17 +217,17 @@ def weekly_variant_fraction(dates, variant_cases, total_cases):
 
     Parameters
     ----------
-    dates : TYPE
-        DESCRIPTION.
-    variant_cases : TYPE
-        DESCRIPTION.
-    total_cases : TYPE
-        DESCRIPTION.
+    dates : array_like of datetime dates
+        All dates, for which case data is given.
+    variant_cases : array_like
+        Daily cases of the respective variant.
+    total_cases : array_like
+        Overall daily cases.
 
     Returns
     -------
-    weekly_fraction : TYPE
-        DESCRIPTION.
+    weekly_fraction : array_like
+        Weekly fraction of variant cases among all cases.
 
     '''
     
@@ -241,13 +243,13 @@ def non_duplicate_list(duplicate_list):
 
     Parameters
     ----------
-    duplicate_list : TYPE
-        DESCRIPTION.
+    duplicate_list : list
+        Input data.
 
     Returns
     -------
-    non_duplicate_list : TYPE
-        DESCRIPTION.
+    non_duplicate_list : list
+        List with elements of duplicate_list, but without duplicates.
 
     '''
     
@@ -261,13 +263,13 @@ def get_previous_monday(date):
 
     Parameters
     ----------
-    date : TYPE
-        DESCRIPTION.
+    date : datetime date
+        Input data.
 
     Returns
     -------
-    prev_monday : TYPE
-        DESCRIPTION.
+    prev_monday : datetime date
+        The monday previous to date.
 
     '''
     
@@ -281,13 +283,13 @@ def german_percent_strings_to_float(strings):
 
     Parameters
     ----------
-    strings : TYPE
-        DESCRIPTION.
+    strings : array_like of strings
+        Array of strings which represent percentages with decimal commas.
 
     Returns
     -------
-    float_list : TYPE
-        DESCRIPTION.
+    float_list : array_like
+        Array of float, given by the strings in strings.
 
     '''
     
@@ -298,6 +300,27 @@ def german_percent_strings_to_float(strings):
 
 
 def compute_emerging_variant(variant, start_date, end_date, data_frame):
+    '''
+    
+
+    Parameters
+    ----------
+    variant : string
+        Name of the emerging variant.
+    start_date : datetime date
+        First date, for which data should be used for interpolation.
+    end_date : datetime date
+        Last date, for which data should be used for interpolation.
+    data_frame : Pandas dataframe
+        Data Frame, in which to store computed values.
+
+    Returns
+    -------
+    None.
+
+    '''
+    
+    # Initialize
     dates = pd.date_range(start_date, end_date).to_pydatetime()
     dates = [date.date() for date in dates]
     dates_as_strings = [f'{date:%Y-%m-%d}' for date in dates]
@@ -398,19 +421,23 @@ def compute_emerging_variant(variant, start_date, end_date, data_frame):
 # Reference monday is the first monday of 2021, the week where variant fraction data in Germany became available
 reference_monday = dt.date(2021, 1, 4)
 
+# Specify start and end dates of interpolation for respective variants
 start_dates = [dt.date(2021, 11, 15), dt.date(2021, 4, 19), dt.date(2021, 1, 4)]
 end_dates = [dt.date(2022, 1, 2), dt.date(2021, 8, 8), dt.date(2021, 4, 4)]
 variants = ['Omikron', 'Delta', 'Alpha']
 
+# Create data frame, in which to store computed values.
 all_dates = pd.date_range(dt.date(2021, 1, 1), dt.date(2021, 12, 31)).to_pydatetime()
 all_dates = [date.date() for date in all_dates]
 cases_per_variant = pd.DataFrame(all_dates, columns=['Date'])
 
 fileformat = 'svg'
 
+# Compute optimal solution
 for i in range(len(variants)):
     compute_emerging_variant(variants[i], start_dates[i], end_dates[i], cases_per_variant)
-    
+
+# Plot optimal solution    
 plt.plot(cases_per_variant['Date'], cases_per_variant['Other variants'], '-o', label='Wild Type')
 plt.plot(cases_per_variant['Date'], cases_per_variant['Alpha'], '-o', label='Alpha')
 plt.plot(cases_per_variant['Date'], cases_per_variant['Delta'], '-o', label='Delta')
@@ -425,5 +452,6 @@ plt.tight_layout()
 plt.savefig(f'./Plots/Daily_new_infections_2021.{fileformat}')
 plt.show()
 
+# Store optimal solution as csv and excel
 cases_per_variant.to_csv('./Data/daily_cases_per_variant.csv', index=False)
 cases_per_variant.to_excel('./Data/daily_cases_per_variant.xlsx', index=False)
