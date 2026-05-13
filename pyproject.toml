@@ -1,0 +1,10 @@
+[project]
+name = "assignment_of_cases_to_variants"
+version = "0.1.0"
+
+[build-system]
+requires = ["setuptools"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+include = ["assignment_of_cases_to_variants*"]    # ← Nur dieses Paket einschließen
