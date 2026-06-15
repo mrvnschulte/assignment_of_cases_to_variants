@@ -1,0 +1,27 @@
+stages:
+  - test
+
+variables:
+  PIP_CACHE_DIR: "$CI_PROJECT_DIR/.cache/pip"
+  MPLBACKEND: "Agg"
+
+cache:
+  paths:
+    - .cache/pip
+
+test:
+  stage: test
+  image: python:3.12
+  before_script:
+    - pip install -e ".[dev]"
+  script:
+    - pytest tests/ -v --tb=short --junit-xml=report.xml --cov=assignment_of_cases_to_variants --cov-report=xml --cov-report=term
+  coverage: '/TOTAL.*\s+(\d+%)$/'
+  artifacts:
+    when: always
+    reports:
+      junit: report.xml
+      coverage_report:
+        coverage_format: cobertura
+        path: coverage.xml
+    expire_in: 1 week

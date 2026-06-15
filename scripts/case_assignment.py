@@ -14,8 +14,8 @@ from assignment_of_cases_to_variants import (
     moving_average_per_variant,
     plot_cases_per_variant,
     plot_fractions_all_variants,
-    plot_variant_transition,
     plot_moving_average_per_variant,
+    plot_variant_transition,
     split_cases_by_variant,
 )
 

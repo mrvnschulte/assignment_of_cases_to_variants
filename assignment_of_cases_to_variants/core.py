@@ -17,7 +17,7 @@ def fit_logistic_variant(
     fraction_data: ArrayLike,
     reference_date: dt.date,
     fit_carrying_capacity: bool = False,
-) -> tuple[float, float, float]:
+) -> tuple[float, float, float, float]:
     """
     Fits a logistic function to the weekly variant fraction data.
 

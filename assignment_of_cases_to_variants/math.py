@@ -43,8 +43,8 @@ def logistic_function(
     c = np.asarray(c)
     alpha = np.asarray(alpha)
     t_0 = np.asarray(t_0)
-
-    y = c / (1 + np.exp(-alpha * (t - t_0)))
+    with np.errstate(over="ignore"):
+        y = c / (1 + np.exp(-alpha * (t - t_0)))
 
     return y
 
