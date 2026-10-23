@@ -153,6 +153,7 @@ if __name__ == "__main__":
 
     fit_carrying_capacity = False
     plot_folder = "../plots"
+    data_folder = "../data"
     plot_title = False
     plot_single_transition = True
     fileformat = "jpg"
@@ -220,15 +221,15 @@ if __name__ == "__main__":
     # Export
     if store_as == "csv":
         cases_per_variant.to_csv(
-            "../data/daily_cases_per_variant.csv", index=False
+            f"{data_folder}/daily_cases_per_variant.csv", index=False
         )
         moving_average_per_variant.to_csv(
-            "../data/moving_average_per_variant.csv", index=False
+            f"{data_folder}/moving_average_per_variant.csv", index=False
         )
     elif store_as == "xlsx":
         cases_per_variant.to_excel(
-            "../data/daily_cases_per_variant.xlsx", index=False
+            f"{data_folder}/daily_cases_per_variant.xlsx", index=False
         )
         moving_average_per_variant.to_excel(
-            "../data/moving_average_per_variant.xlsx", index=False
+            f"{data_folder}/moving_average_per_variant.xlsx", index=False
         )
