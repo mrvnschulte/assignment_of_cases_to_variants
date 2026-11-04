@@ -1,3 +1,4 @@
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.23965033.svg)](https://doi.org/10.5281/zenodo.23965033)
 [![Tests](https://github.com/mrvnschulte/assignment_of_cases_to_variants/actions/workflows/tests.yml/badge.svg?branch=master)](https://github.com/mrvnschulte/assignment_of_cases_to_variants/actions/workflows/tests.yml)
 [![codecov](https://codecov.io/gh/mrvnschulte/assignment_of_cases_to_variants/branch/master/graph/badge.svg)](https://codecov.io/gh/mrvnschulte/assignment_of_cases_to_variants)
 [![Documentation](https://img.shields.io/badge/documentation-GitHub%20Pages-blue)](https://mrvnschulte.github.io/assignment_of_cases_to_variants/)
@@ -142,7 +143,9 @@ python case_assignment.py
 
 If you use this software in your research, please cite:
 
-[Citation will be added upon publication]
+[Corresponding paper will be added upon publication]
+
+Schulte, M. (2026). *Assignment of Cases to Variants: Version 1.0* (Version v1.0) [Computer software]. Zenodo. https://doi.org/10.5281/zenodo.23965034
 
 
 ## License
