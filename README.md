@@ -130,12 +130,13 @@ python case_assignment.py
 ## Citation
 
 If you use this software in your research, please cite:
+
 [Citation will be added upon publication]
 
 
 ## License
 
-tba
+This project is licensed under the [BSD 3-Clause License](LICENSE).
 
 ## Author
 
