@@ -153,4 +153,5 @@ This project is licensed under the [BSD 3-Clause License](LICENSE).
 
 Marvin Schulte - [marvin.schulte@itwm.fraunhofer.de](mailto:marvin.schulte@itwm.fraunhofer.de)
 
-Fraunhofer Institute for Industrial Mathematics ITWM
+Department Flow Processes, Division Processes and Materials, Fraunhofer Institute for Industrial Mathematics ITWM
+Department of Mathematics, RPTU University of Kaiserslautern-Landau
