@@ -10,6 +10,7 @@ from assignment_of_cases_to_variants.plotter import (
     plot_cases_per_variant,
     plot_fractions_all_variants,
     plot_moving_average_per_variant,
+    plot_incidence_per_variant,
 )
 
 REF = dt.date(2021, 1, 4)
@@ -111,5 +112,21 @@ class TestPlotMovingAveragePerVariant:
         df = make_cases_df(["Alpha"])
         plot_moving_average_per_variant(
             ["Alpha"], df, folder=tmp_path, title=True
+        )
+        mock_save.assert_called_once()
+
+
+@patch("matplotlib.pyplot.show")
+@patch("matplotlib.pyplot.savefig")
+class TestPlotIncidencePerVariant:
+    def test_runs_without_error(self, mock_save, mock_show, tmp_path):
+        df = make_cases_df(["Alpha"])
+        plot_incidence_per_variant(["Alpha"], df, 1e6, folder=tmp_path)
+        mock_save.assert_called_once()
+
+    def test_with_title(self, mock_save, mock_show, tmp_path):
+        df = make_cases_df(["Alpha"])
+        plot_incidence_per_variant(
+            ["Alpha"], df, 1e6, folder=tmp_path, title=True
         )
         mock_save.assert_called_once()

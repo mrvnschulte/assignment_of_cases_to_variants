@@ -30,6 +30,9 @@ def plot_variant_transition(
     fileformat: str = "jpg",
     title: bool = False,
     dpi: int = 500,
+    fontsize_text: int = 16,
+    fontsize_ticks: int = 14,
+    alpha_grid: float = 0.7,
 ):
     """
     Plots the daily case split and weekly fraction fit for a variant
@@ -61,6 +64,12 @@ def plot_variant_transition(
         If True, plots include a title. The default is False.
     dpi : int, optional
         Resolution for plots. The default is 500.
+    fontsize_text : int, optional
+        Fontsize of axis labels. The default is 16.
+    fontsize_ticks : int, optional
+        Fontsize of tick labels. The default is 14.
+    alpha_grid : float, optional
+        Alpha value for grid. The default is 0.7.
 
     Returns
     -------
@@ -90,19 +99,28 @@ def plot_variant_transition(
     fig, ax = plt.subplots()
     ax.plot(dates, emerging_variant_cases, "-o", label=variant)
     ax.plot(dates, other_variant_cases, "-o", label="Other variants")
-    ax.set_xlabel("Date")
-    ax.set_ylabel("New infections")
-    ax.legend()
-    ax.grid()
+    ax.set_xlabel("Date", fontsize=fontsize_text)
+    ax.set_ylabel("Reported cases", fontsize=fontsize_text)
+    fig.legend(
+        loc="upper center",
+        bbox_to_anchor=(0.5, -0.25),
+        ncol=2,
+        fontsize=fontsize_text,
+    )
+    ax.grid(alpha=alpha_grid)
     if title:
-        ax.set_title("Reported new infections per variant and day")
+        ax.set_title("Reported cases per variant and day")
     ax.set_xticks(mondays)
+    plt.xticks(fontsize=fontsize_ticks)
+    plt.yticks(fontsize=fontsize_ticks)
+    plt.xlim(dates[0], dates[-1])
+    plt.ylim(bottom=0)
     ax.tick_params(axis="x", rotation=90)
-    fig.tight_layout()
     fig.savefig(
         folder
-        / f"Daily_new_infections_{variant_filename}_variant.{fileformat}",
+        / f"daily_new_infections_{variant_filename}_variant.{fileformat}",
         dpi=dpi,
+        bbox_inches="tight",
     )
     plt.show()
 
@@ -110,19 +128,27 @@ def plot_variant_transition(
     fig, ax = plt.subplots()
     ax.plot(thursdays, weekly_fraction, "o", label="Computed data")
     ax.plot(thursdays, fraction_data, "x", label="Measured data")
-    ax.set_xlabel("Week")
-    ax.set_ylabel("Fraction of cases")
-    ax.legend()
-    ax.grid()
+    ax.set_xlabel("Week", fontsize=fontsize_text)
+    ax.set_ylabel(f"Fraction of\n{variant} cases", fontsize=fontsize_text)
+    fig.legend(
+        loc="upper center",
+        bbox_to_anchor=(0.47, -0.18),
+        ncol=2,
+        fontsize=fontsize_text,
+    )
+    ax.grid(alpha=alpha_grid)
     if title:
         ax.set_title(f"Weekly case fraction of {variant} variant")
     ax.set_xticks(thursdays)
     ax.set_xticklabels(calendar_weeks, rotation=90)
-    fig.tight_layout()
+    plt.xticks(fontsize=fontsize_ticks)
+    plt.yticks(fontsize=fontsize_ticks)
+    plt.ylim(bottom=0, top=1)
     fig.savefig(
         folder
-        / f"Weekly_case_fraction_{variant_filename}_variant.{fileformat}",
+        / f"weekly_case_fraction_{variant_filename}_variant.{fileformat}",
         dpi=dpi,
+        bbox_inches="tight",
     )
     plt.show()
 
@@ -134,6 +160,9 @@ def plot_cases_per_variant(
     fileformat: str = "jpg",
     title: bool = False,
     dpi: int = 500,
+    fontsize_text: int = 16,
+    fontsize_ticks: int = 14,
+    alpha_grid: float = 0.7,
 ):
     """
     Plot daily cases per variant as given by cases_per_variant.
@@ -152,6 +181,12 @@ def plot_cases_per_variant(
         If True, plot includes a title. The default is False.
     dpi : int, optional
         Resolution for plot. The default is 500.
+    fontsize_text : int, optional
+        Fontsize of axis labels. The default is 16.
+    fontsize_ticks : int, optional
+        Fontsize of tick labels. The default is 14.
+    alpha_grid : float, optional
+        Alpha value for grid. The default is 0.7.
 
     Returns
     -------
@@ -170,15 +205,29 @@ def plot_cases_per_variant(
             "-o",
             label=variant,
         )
-    plt.grid()
-    plt.legend()
+    plt.grid(alpha=alpha_grid)
+    plt.legend(
+        loc="upper center",
+        bbox_to_anchor=(0.5, -0.4),
+        ncol=2,
+        fontsize=fontsize_text,
+    )
     if title:
-        plt.title("Reported new infections per variant and day")
-    plt.xlabel("Date")
-    plt.ylabel("New infections")
-    plt.xticks(rotation=90)
-    plt.tight_layout()
-    plt.savefig(f"{folder}/Daily_new_infections.{fileformat}", dpi=dpi)
+        plt.title("Reported cases per variant and day")
+    plt.xlabel("Date", fontsize=fontsize_text)
+    plt.ylabel("Reported cases", fontsize=fontsize_text)
+    plt.xticks(rotation=90, fontsize=fontsize_ticks)
+    plt.yticks(fontsize=fontsize_ticks)
+    plt.xlim(
+        cases_per_variant["Date"].iloc[0],
+        cases_per_variant["Date"].iloc[-1],
+    )
+    plt.ylim(bottom=0)
+    plt.savefig(
+        f"{folder}/daily_new_infections.{fileformat}",
+        dpi=dpi,
+        bbox_inches="tight",
+    )
     plt.show()
 
 
@@ -189,6 +238,9 @@ def plot_fractions_all_variants(
     fileformat: str = "jpg",
     title: bool = False,
     dpi: int = 500,
+    fontsize_text: int = 16,
+    fontsize_ticks: int = 14,
+    alpha_grid: float = 0.7,
 ):
     """
     Plot weekly fractions per variant given by cases_per_variant as stackplot.
@@ -207,6 +259,12 @@ def plot_fractions_all_variants(
         If True, plot includes a title. The default is False.
     dpi : int, optional
         Resolution for plot. The default is 500.
+    fontsize_text : int, optional
+        Fontsize of axis labels. The default is 16.
+    fontsize_ticks : int, optional
+        Fontsize of tick labels. The default is 14.
+    alpha_grid : float, optional
+        Alpha value for grid. The default is 0.7.
 
     Returns
     -------
@@ -238,14 +296,25 @@ def plot_fractions_all_variants(
         labels.append(variant)
 
     plt.stackplot(thursdays, fractions, labels=labels)
-    plt.legend(loc="center left", bbox_to_anchor=(1, 0.5))
+    plt.legend(
+        loc="upper center",
+        bbox_to_anchor=(0.5, -0.4),
+        ncol=2,
+        fontsize=fontsize_text,
+    )
     if title:
         plt.title("Weekly variant fraction")
-    plt.xlabel("Week")
-    plt.ylabel("Variant fraction")
-    plt.xticks(rotation=90)
-    plt.tight_layout()
-    plt.savefig(f"{folder}/Weekly_variant_fractions.{fileformat}", dpi=dpi)
+    plt.xlabel("Week", fontsize=fontsize_text)
+    plt.ylabel("Variant fraction", fontsize=fontsize_text)
+    plt.xlim(thursdays[0], thursdays[-1])
+    plt.ylim(0, 1)
+    plt.xticks(rotation=90, fontsize=fontsize_ticks)
+    plt.yticks(fontsize=fontsize_ticks)
+    plt.savefig(
+        f"{folder}/weekly_variant_fractions.{fileformat}",
+        dpi=dpi,
+        bbox_inches="tight",
+    )
     plt.show()
 
 
@@ -256,9 +325,12 @@ def plot_moving_average_per_variant(
     fileformat: str = "jpg",
     title: bool = False,
     dpi: int = 500,
+    fontsize_text: int = 16,
+    fontsize_ticks: int = 14,
+    alpha_grid: float = 0.7,
 ):
     """
-    Plot weekly fractions per variant given by cases_per_variant as stackplot.
+    Plot moving average of cases given by moving_average_per_variant.
 
     Parameters
     ----------
@@ -274,6 +346,12 @@ def plot_moving_average_per_variant(
         If True, plot includes a title. The default is False.
     dpi : int, optional
         Resolution for plot. The default is 500.
+    fontsize_text : int, optional
+        Fontsize of axis labels. The default is 16.
+    fontsize_ticks : int, optional
+        Fontsize of tick labels. The default is 14.
+    alpha_grid : float, optional
+        Alpha value for grid. The default is 0.7.
 
     Returns
     -------
@@ -292,17 +370,116 @@ def plot_moving_average_per_variant(
             "o",
             label=variant,
         )
-    plt.grid()
-    plt.legend()
+    plt.grid(alpha=alpha_grid)
+    plt.legend(
+        loc="upper center",
+        bbox_to_anchor=(0.5, -0.4),
+        ncol=2,
+        fontsize=fontsize_text,
+    )
     if title:
         plt.title(
             "Reported new infections (7-day moving average) per variant and day"
         )
-    plt.xlabel("Date")
-    plt.ylabel("New infections (7-day moving average)")
-    plt.xticks(rotation=90)
-    plt.tight_layout()
+    plt.xlabel("Date", fontsize=fontsize_text)
+    plt.ylabel(
+        "Reported cases\n(7-day moving average)", fontsize=fontsize_text
+    )
+    plt.xticks(rotation=90, fontsize=fontsize_ticks)
+    plt.yticks(fontsize=fontsize_ticks)
+    plt.xlim(
+        moving_average_per_variant["Date"].iloc[0],
+        moving_average_per_variant["Date"].iloc[-1],
+    )
+    plt.ylim(bottom=0)
     plt.savefig(
-        f"{folder}/Daily_new_infections_moving_average.{fileformat}", dpi=dpi
+        f"{folder}/daily_new_infections_moving_average.{fileformat}",
+        dpi=dpi,
+        bbox_inches="tight",
+    )
+    plt.show()
+
+
+def plot_incidence_per_variant(
+    variants: list[str],
+    moving_average_per_variant: pd.DataFrame,
+    population: int,
+    folder: str | Path = ".",
+    fileformat: str = "jpg",
+    title: bool = False,
+    dpi: int = 500,
+    fontsize_text: int = 16,
+    fontsize_ticks: int = 14,
+    alpha_grid: float = 0.7,
+):
+    """
+    Plot incidence of cases given by moving_average_per_variant.
+
+    Parameters
+    ----------
+    variants : list[str]
+        List of variants.
+    moving_average_per_variant : pd.DataFrame
+        Data frame with moving average of cases per variant.
+    population : int
+        Population size.
+    folder : str or Path, optional
+        Folder to save the plot. The default is '.'.
+    fileformat : str, optional
+        File format for plot. The default is 'jpg'.
+    title : bool, optional
+        If True, plot includes a title. The default is False.
+    dpi : int, optional
+        Resolution for plot. The default is 500.
+    fontsize_text : int, optional
+        Fontsize of axis labels. The default is 16.
+    fontsize_ticks : int, optional
+        Fontsize of tick labels. The default is 14.
+    alpha_grid : float, optional
+        Alpha value for grid. The default is 0.7.
+
+    Returns
+    -------
+    None.
+    """
+    plt.plot(
+        moving_average_per_variant["Date"],
+        moving_average_per_variant["Other variants"] / population * 1e5,
+        "o",
+        label="Wild Type",
+    )
+    for variant in reversed(variants):
+        plt.plot(
+            moving_average_per_variant["Date"],
+            moving_average_per_variant[variant] / population * 1e5,
+            "o",
+            label=variant,
+        )
+    plt.grid(alpha=alpha_grid)
+    plt.legend(
+        loc="upper center",
+        bbox_to_anchor=(0.5, -0.4),
+        ncol=2,
+        fontsize=fontsize_text,
+    )
+    if title:
+        plt.title(
+            "Reported cases per 100,000 (7-day moving average)\nper variant and day"
+        )
+    plt.xlabel("Date", fontsize=fontsize_text)
+    plt.ylabel(
+        "Cases per 100,000\n(7-day moving average)", fontsize=fontsize_text
+    )
+    plt.xticks(rotation=90, fontsize=fontsize_ticks)
+    plt.yticks(fontsize=fontsize_ticks)
+    plt.xlim(
+        moving_average_per_variant["Date"].iloc[0],
+        moving_average_per_variant["Date"].iloc[-1],
+    )
+    plt.ylim(bottom=0)
+    plt.savefig(
+        f"{folder}/daily_incidence_moving_average.{fileformat}",
+        dpi=dpi,
+        bbox_inches="tight",
     )
     plt.show()

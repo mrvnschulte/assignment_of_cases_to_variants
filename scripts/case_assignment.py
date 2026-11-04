@@ -15,6 +15,7 @@ from assignment_of_cases_to_variants import (
     plot_cases_per_variant,
     plot_fractions_all_variants,
     plot_moving_average_per_variant,
+    plot_incidence_per_variant,
     plot_variant_transition,
     split_cases_by_variant,
 )
@@ -93,7 +94,7 @@ def compute_emerging_variant(
     )
     if verbose:
         print(
-            f"[{variant}] alpha={alpha:.4f}, t_0={t_0:.1f}, c={c:.3f} "
+            f"[{variant}] alpha={alpha:.4f}, t_1/2={t_0:.1f}, c={c:.3f} "
             f"residual={residual:.6f}"
         )
 
@@ -126,110 +127,117 @@ def compute_emerging_variant(
         )
 
 
-if __name__ == "__main__":
-    variants = [
-        "Omicron BA.5",
-        "Omicron BA.2",
-        "Omicron BA.1",
-        "Delta",
-        "Alpha",
-    ]
-    start_dates = [
-        dt.date(2022, 4, 25),
-        dt.date(2022, 1, 17),
-        dt.date(2021, 11, 15),
-        dt.date(2021, 4, 19),
-        dt.date(2021, 1, 4),
-    ]
-    end_dates = [
-        dt.date(2022, 7, 24),
-        dt.date(2022, 4, 17),
-        dt.date(2022, 1, 16),
-        dt.date(2021, 8, 8),
-        dt.date(2021, 4, 4),
-    ]
-    start_date_overall = dt.date(2021, 1, 1)
-    end_date_overall = dt.date(2022, 9, 1)
+variants = [
+    "Omicron BA.5",
+    "Omicron BA.2",
+    "Omicron BA.1",
+    "Delta",
+    "Alpha",
+]
+start_dates = [
+    dt.date(2022, 4, 25),
+    dt.date(2022, 1, 17),
+    dt.date(2021, 11, 15),
+    dt.date(2021, 4, 19),
+    dt.date(2021, 1, 4),
+]
+end_dates = [
+    dt.date(2022, 7, 24),
+    dt.date(2022, 4, 17),
+    dt.date(2022, 1, 16),
+    dt.date(2021, 8, 8),
+    dt.date(2021, 4, 4),
+]
+start_date_overall = dt.date(2021, 1, 1)
+end_date_overall = dt.date(2022, 9, 1)
+population = 83_497_147
 
-    fit_carrying_capacity = False
-    plot_folder = "../plots"
-    data_folder = "../data"
-    plot_title = False
-    plot_single_transition = True
-    fileformat = "jpg"
-    dpi = 500
-    verbose = True
-    store_as = "csv"  # Can be 'csv' or 'xlsx'
+fit_carrying_capacity = False
+plot_folder = "../plots"
+data_folder = "../data"
+plot_title = False
+plot_single_transition = True
+fileformat = "pdf"
+dpi = 1200
+verbose = True
+store_as = "no"  # Can be 'csv' or 'xlsx'
 
-    case_file = "../data/infection_data/covid-19_cases_germany.csv"
-    fraction_file = "../data/variant_fraction_data/voc_voi_table.xlsx"
+case_file = "../data/infection_data/covid-19_cases_germany.csv"
+fraction_file = "../data/variant_fraction_data/voc_voi_table.xlsx"
 
-    # Create data frame
-    all_dates = pd.date_range(
-        start_date_overall, end_date_overall
-    ).to_pydatetime()
-    all_dates = [date.date() for date in all_dates]
-    cases_per_variant = pd.DataFrame(all_dates, columns=["Date"])
+# Create data frame
+all_dates = pd.date_range(start_date_overall, end_date_overall).to_pydatetime()
+all_dates = [date.date() for date in all_dates]
+cases_per_variant = pd.DataFrame(all_dates, columns=["Date"])
 
-    # Compute all variants
-    for i in range(len(variants)):
-        compute_emerging_variant(
-            variants[i],
-            start_dates[i],
-            end_dates[i],
-            cases_per_variant,
-            case_file=case_file,
-            fraction_file=fraction_file,
-            fit_carrying_capacity=fit_carrying_capacity,
-            verbose=verbose,
-            plot=plot_single_transition,
-            folder=plot_folder,
-            fileformat=fileformat,
-            title=plot_title,
-            dpi=dpi,
-        )
-    moving_average_per_variant = moving_average_per_variant(
-        variants, cases_per_variant
-    )
-
-    # Summary plots
-    plot_cases_per_variant(
-        variants,
+# Compute all variants
+for i in range(len(variants)):
+    compute_emerging_variant(
+        variants[i],
+        start_dates[i],
+        end_dates[i],
         cases_per_variant,
+        case_file=case_file,
+        fraction_file=fraction_file,
+        fit_carrying_capacity=fit_carrying_capacity,
+        verbose=verbose,
+        plot=plot_single_transition,
         folder=plot_folder,
         fileformat=fileformat,
         title=plot_title,
         dpi=dpi,
     )
-    plot_fractions_all_variants(
-        variants,
-        cases_per_variant,
-        folder=plot_folder,
-        fileformat=fileformat,
-        title=plot_title,
-        dpi=dpi,
-    )
-    plot_moving_average_per_variant(
-        variants,
-        moving_average_per_variant,
-        folder=plot_folder,
-        fileformat=fileformat,
-        title=plot_title,
-        dpi=dpi,
-    )
+moving_average_per_variant = moving_average_per_variant(
+    variants, cases_per_variant
+)
 
-    # Export
-    if store_as == "csv":
-        cases_per_variant.to_csv(
-            f"{data_folder}/daily_cases_per_variant.csv", index=False
-        )
-        moving_average_per_variant.to_csv(
-            f"{data_folder}/moving_average_per_variant.csv", index=False
-        )
-    elif store_as == "xlsx":
-        cases_per_variant.to_excel(
-            f"{data_folder}/daily_cases_per_variant.xlsx", index=False
-        )
-        moving_average_per_variant.to_excel(
-            f"{data_folder}/moving_average_per_variant.xlsx", index=False
-        )
+# Summary plots
+plot_cases_per_variant(
+    variants,
+    cases_per_variant,
+    folder=plot_folder,
+    fileformat=fileformat,
+    title=plot_title,
+    dpi=dpi,
+)
+plot_fractions_all_variants(
+    variants,
+    cases_per_variant,
+    folder=plot_folder,
+    fileformat=fileformat,
+    title=plot_title,
+    dpi=dpi,
+)
+plot_moving_average_per_variant(
+    variants,
+    moving_average_per_variant,
+    folder=plot_folder,
+    fileformat=fileformat,
+    title=plot_title,
+    dpi=dpi,
+)
+plot_incidence_per_variant(
+    variants,
+    moving_average_per_variant,
+    population,
+    folder=plot_folder,
+    fileformat=fileformat,
+    title=plot_title,
+    dpi=dpi,
+)
+
+# Export
+if store_as == "csv":
+    cases_per_variant.to_csv(
+        f"{data_folder}/daily_cases_per_variant.csv", index=False
+    )
+    moving_average_per_variant.to_csv(
+        f"{data_folder}/moving_average_per_variant.csv", index=False
+    )
+elif store_as == "xlsx":
+    cases_per_variant.to_excel(
+        f"{data_folder}/daily_cases_per_variant.xlsx", index=False
+    )
+    moving_average_per_variant.to_excel(
+        f"{data_folder}/moving_average_per_variant.xlsx", index=False
+    )
