@@ -1,5 +1,5 @@
-[![Tests](https://gitlab.itwm.fraunhofer.de/schulte/assignment-of-cases-to-variants/badges/master/pipeline.svg?key_text=Tests&key_width=40)](https://gitlab.itwm.fraunhofer.de/schulte/assignment-of-cases-to-variants/-/pipelines)
-[![Coverage](https://gitlab.itwm.fraunhofer.de/schulte/assignment-of-cases-to-variants/badges/master/coverage.svg)](https://gitlab.itwm.fraunhofer.de/schulte/assignment-of-cases-to-variants/-/commits/master)
+[![Tests](https://github.com/mrvnschulte/assignment_of_cases_to_variants/actions/workflows/tests.yml/badge.svg?branch=master)](https://github.com/mrvnschulte/assignment_of_cases_to_variants/actions/workflows/tests.yml)
+[![codecov](https://codecov.io/gh/mrvnschulte/assignment_of_cases_to_variants/branch/master/graph/badge.svg)](https://codecov.io/gh/mrvnschulte/assignment_of_cases_to_variants)
 
 
 # Assignment of Cases to Variants
