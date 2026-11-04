@@ -1,5 +1,10 @@
 [![Tests](https://github.com/mrvnschulte/assignment_of_cases_to_variants/actions/workflows/tests.yml/badge.svg?branch=master)](https://github.com/mrvnschulte/assignment_of_cases_to_variants/actions/workflows/tests.yml)
 [![codecov](https://codecov.io/gh/mrvnschulte/assignment_of_cases_to_variants/branch/master/graph/badge.svg)](https://codecov.io/gh/mrvnschulte/assignment_of_cases_to_variants)
+[![Documentation](https://img.shields.io/badge/documentation-GitHub%20Pages-blue)](https://mrvnschulte.github.io/assignment_of_cases_to_variants/)
+
+<p align="center">
+  <img src="docs/source/_static/logo.png" alt="Assignment of Cases to Variants logo" width="180">
+</p>
 
 
 # Assignment of Cases to Variants
@@ -35,6 +40,12 @@ pip install -e ".[dev]"
 - openpyxl >= 3.0.0
 - pandas >= 1.3.0
 - scipy >= 1.7.0
+
+## Documentation
+
+The API documentation is available at:
+
+[https://mrvnschulte.github.io/assignment_of_cases_to_variants/](https://mrvnschulte.github.io/assignment_of_cases_to_variants/)
 
 ## Method Description
 
