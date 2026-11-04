@@ -4,3 +4,4 @@ assignment_of_cases_to_variants.egg-info/
 __pycache__/
 .pytest_cache/
 .coverage
+build/

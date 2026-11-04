@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "assignment_of_cases_to_variants"
-version = "0.1.0"
+version = "1.0"
 description = "Assigns COVID-19 case data to individual variants using logistic growth fitting"
 readme = "README.md"
 
