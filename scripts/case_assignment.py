@@ -160,7 +160,7 @@ plot_single_transition = True
 fileformat = "pdf"
 dpi = 1200
 verbose = True
-store_as = "no"  # Can be 'csv' or 'xlsx'
+store_as = "csv"  # Can be 'csv' or 'xlsx'
 
 case_file = "../data/infection_data/covid-19_cases_germany.csv"
 fraction_file = "../data/variant_fraction_data/voc_voi_table.xlsx"
